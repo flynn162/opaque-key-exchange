@@ -1,0 +1,18 @@
+# Mac OS
+.DS_Store
+._*
+
+# Emacs
+*~
+\#*\#
+
+# Compiled objects, build logs, etc.
+*.o
+*.so
+*.dll
+*.exe
+*.log
+build/
+
+# Ninja build system
+.ninja_*

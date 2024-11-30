@@ -1,0 +1,9 @@
+BasedOnStyle: Mozilla
+
+AlignAfterOpenBracket: AlwaysBreak
+ColumnLimit: 120
+ContinuationIndentWidth: 4
+IndentPPDirectives: BeforeHash
+IndentWidth: 4
+SortIncludes: Never
+TypenameMacros: ['Wrap']

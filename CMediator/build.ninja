@@ -1,0 +1,53 @@
+soname = libCMediator.so.0.1.0
+
+c_include_flags = $
+  -I/opt/swift/libopaque-0.99.7/include $
+  -I/opt/swift/liboprf-0.4.0/include
+ld_comptime_paths = $
+  -L/opt/swift/libopaque-0.99.7/lib $
+  `pkg-config --libs-only-L libsodium`
+ld_runtime_paths = $
+  -Wl,-rpath,/opt/swift/libopaque-0.99.7/lib
+
+cc = gcc
+cflags = -O2 -Wall -Wextra -fPIC `pkg-config --cflags libsodium` $c_include_flags
+ldlibs = -lopaque `pkg-config --libs-only-l libsodium`
+
+# Quality assurance flags:
+
+# - Pass `-Wl,--no-undefined` to detect any missing -l flags at build time
+# <https://stackoverflow.com/a/63981003>
+
+# - Pass `no-as-needed` to ensure linking with the sodium library (disables "lazy" behavior)
+# <https://stackoverflow.com/a/62117174>
+# Use `ldd -r libCMediator.so` to verify
+
+# - Full RELRO (shown as `BIND_NOW` in `readelf -d` output)
+# <https://www.redhat.com/en/blog/hardening-elf-binaries-using-relocation-read-only-relro>
+
+# - Emit a reproducible build ID (`-Wl,--build-id`)
+
+ldflags = -export-dynamic -shared -Wl,-soname,$soname $
+  -Wl,--no-undefined -Wl,--no-as-needed -Wl,-z,relro,-z,now -Wl,--build-id $
+  `pkg-config --libs-only-other libsodium` $
+  $ldlibs $ld_comptime_paths $ld_runtime_paths
+
+builddir = build
+
+rule build_object
+  command = $cc -std=c17 -c $cflags -o $out $in
+
+rule build_so
+  command = $cc -std=c17 $ldflags -o $out $in
+
+rule dump_build_config
+  command = (echo cc: $cc ; $
+    echo cflags: $cflags ; $
+    echo ldflags: $ldflags ; $
+    echo sha256: ; $
+    shasum -a256 $in ; $
+    echo END) >$out 2>$out
+
+build $builddir/CMediator.o: build_object CMediator.c
+build $builddir/libCMediator.so: build_so $builddir/CMediator.o
+build $builddir/build_config.log: dump_build_config $builddir/libCMediator.so
