@@ -11,3 +11,9 @@ Building:
 ```
 ninja -v
 ```
+
+Unit tests:
+
+```
+./build/test_libCMediator
+```

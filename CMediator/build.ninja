@@ -27,7 +27,7 @@ ldlibs = -lopaque `pkg-config --libs-only-l libsodium`
 
 # - Emit a reproducible build ID (`-Wl,--build-id`)
 
-ldflags = -export-dynamic -shared -Wl,-soname,$soname $
+ldflags = -export-dynamic -Wl,-soname,$soname $
   -Wl,--no-undefined -Wl,--no-as-needed -Wl,-z,relro,-z,now -Wl,--build-id $
   `pkg-config --libs-only-other libsodium` $
   $ldlibs $ld_comptime_paths $ld_runtime_paths
@@ -37,8 +37,14 @@ builddir = build
 rule build_object
   command = $cc -std=c17 -c $cflags -o $out $in
 
+rule build_object_test
+  command = $cc -std=c17 -c -g -DUNIT_TESTING $cflags -o $out $in
+
 rule build_so
-  command = $cc -std=c17 $ldflags -o $out $in
+  command = $cc -std=c17 -shared $ldflags -o $out $in
+
+rule build_so_test
+  command = $cc -std=c17 $ldflags -lcmocka -o $out $in
 
 rule dump_build_config
   command = (echo cc: $cc ; $
@@ -49,5 +55,10 @@ rule dump_build_config
     echo END) >$out 2>$out
 
 build $builddir/CMediator.o: build_object CMediator.c
+build $builddir/test_CMediator.o: build_object_test CMediator.c
+
 build $builddir/libCMediator.so: build_so $builddir/CMediator.o
+build $builddir/test_libCMediator: build_so_test $builddir/test_CMediator.o
+
 build $builddir/build_config.log: dump_build_config $builddir/libCMediator.so
+build $builddir/test_config.log: dump_build_config $builddir/test_libCMediator

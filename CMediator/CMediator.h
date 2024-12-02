@@ -23,6 +23,9 @@ extern const uint16_t Wrap(alignof_Opaque_Ids);
 // initializer for libsodium
 int Wrap(sodium_init)(void);
 
+// securely erase memory
+void Wrap(sodium_memzero)(void* const pnt, const size_t len);
+
 // keygen
 const char* Wrap(Ex01_crypto_secretbox_keygen)(unsigned char k[], unsigned long long klen)
     __attribute__((warn_unused_result));
