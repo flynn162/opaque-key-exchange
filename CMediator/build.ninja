@@ -10,6 +10,7 @@ ld_runtime_paths = $
   -Wl,-rpath,/opt/swift/libopaque-0.99.7/lib
 
 cc = gcc
+# Note: we use the same level of optimization for release and testing
 cflags = -O2 -Wall -Wextra -fPIC `pkg-config --cflags libsodium` $c_include_flags
 ldlibs = -lopaque `pkg-config --libs-only-l libsodium`
 
@@ -32,24 +33,27 @@ ldflags = -export-dynamic -Wl,-soname,$soname $
   `pkg-config --libs-only-other libsodium` $
   $ldlibs $ld_comptime_paths $ld_runtime_paths
 
+test_sanitizer_flags = -fno-sanitize-recover -fno-omit-frame-pointer -fsanitize=address,undefined
+
 builddir = build
 
 rule build_object
   command = $cc -std=c17 -c $cflags -o $out $in
 
 rule build_object_test
-  command = $cc -std=c17 -c -g -DUNIT_TESTING $cflags -o $out $in
+  command = $cc -std=c17 -c -g -DUNIT_TESTING $test_sanitizer_flags $cflags -o $out $in
 
 rule build_so
   command = $cc -std=c17 -shared $ldflags -o $out $in
 
 rule build_so_test
-  command = $cc -std=c17 $ldflags -lcmocka -o $out $in
+  command = $cc -std=c17 $test_sanitizer_flags $ldflags -lcmocka -o $out $in
 
 rule dump_build_config
   command = (echo cc: $cc ; $
     echo cflags: $cflags ; $
     echo ldflags: $ldflags ; $
+    echo test_sanitizer_flags: $test_sanitizer_flags ; $
     echo sha256: ; $
     shasum -a256 $in ; $
     echo END) >$out 2>$out
