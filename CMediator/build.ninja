@@ -11,7 +11,7 @@ ld_runtime_paths = $
 
 cc = gcc
 # Note: we use the same level of optimization for release and testing
-cflags = -O2 -Wall -Wextra -fPIC `pkg-config --cflags libsodium` $c_include_flags
+cflags = -O2 -Wall -Wextra -Werror -fPIC `pkg-config --cflags libsodium` $c_include_flags
 ldlibs = -lopaque `pkg-config --libs-only-l libsodium`
 
 # Quality assurance flags:

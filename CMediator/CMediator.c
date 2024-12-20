@@ -21,6 +21,15 @@
     #error "This file uses the C17 standard"
 #endif
 
+// treat integer overflow as a compilation error
+// NOTE: clang check must appear before gcc check
+#if defined(__clang__)
+    #pragma clang diagnotic error "-Winteger-overflow"
+#elif defined(__GNUC__)
+    #pragma GCC diagnostic error "-Woverflow"
+#endif
+// end pragmas
+
 #ifdef UNIT_TESTING
 
 // libsodium basic usage
@@ -116,12 +125,6 @@ CMediator_test_basic_encryption_decryption(void** state)
 
 // libsodium constants
 
-_Static_assert(UINT16_MAX > crypto_core_ristretto255_BYTES, "ristretto255_BYTES could not be fit into 16 bits");
-_Static_assert(UINT16_MAX > crypto_scalarmult_SCALARBYTES, "scalarmult_SCALARBYTES could not be fit into 16 bits");
-_Static_assert(UINT16_MAX > crypto_secretbox_KEYBYTES, "KEYBYTES could not be fit into 16 bits");
-_Static_assert(UINT16_MAX > crypto_secretbox_MACBYTES, "MACBYTES could not be fit into 16 bits");
-_Static_assert(UINT16_MAX > crypto_secretbox_NONCEBYTES, "NONCEBYTES could not be fit into 16 bits");
-
 const uint16_t Wrap(const_crypto_core_ristretto255_BYTES) = crypto_core_ristretto255_BYTES;
 const uint16_t Wrap(const_crypto_scalarmult_SCALARBYTES) = crypto_scalarmult_SCALARBYTES;
 const uint16_t Wrap(const_crypto_secretbox_KEYBYTES) = crypto_secretbox_KEYBYTES;
@@ -136,13 +139,6 @@ struct Wrap(Opaque_Ids_st)
 };
 
 // libopaque constants
-
-_Static_assert(UINT16_MAX > OPAQUE_REGISTER_PUBLIC_LEN, "REGISTER_PUBLIC_LEN could not be fit into 16 bits");
-_Static_assert(UINT16_MAX > OPAQUE_REGISTER_SECRET_LEN, "REGISTER_SECRET_LEN could not be fit into 16 bits");
-_Static_assert(UINT16_MAX > OPAQUE_REGISTRATION_RECORD_LEN, "REGISTRATION_RECORD_LEN could not be fit into 16 bits");
-_Static_assert(UINT16_MAX > OPAQUE_USER_RECORD_LEN, "USER_RECORD_LEN could not be fit into 16 bits");
-_Static_assert(UINT16_MAX > sizeof(Wrap(Opaque_Ids)), "sizeof(Opaque_Ids) could not be fit into 16 bits");
-_Static_assert(UINT16_MAX > alignof(Wrap(Opaque_Ids)), "alignof(Opaque_Ids) could not be fit into 16 bits");
 
 const uint16_t Wrap(const_OPAQUE_REGISTER_PUBLIC_LEN) = OPAQUE_REGISTER_PUBLIC_LEN;
 const uint16_t Wrap(const_OPAQUE_REGISTER_SECRET_LEN) = OPAQUE_REGISTER_SECRET_LEN;
