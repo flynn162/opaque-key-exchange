@@ -17,3 +17,5 @@
 
 // Latest internal major ABI version
 #define Wrap(x) CythWrapMyConcat2(CythWrapV01_, x)
+
+#define CYTH_WRAP_EXPORT __attribute__((visibility("protected")))

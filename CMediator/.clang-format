@@ -7,3 +7,4 @@ IndentPPDirectives: BeforeHash
 IndentWidth: 4
 SortIncludes: Never
 TypenameMacros: ['Wrap']
+StatementAttributeLikeMacros: ['CYTH_WRAP_EXPORT']
