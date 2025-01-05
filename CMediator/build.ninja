@@ -10,59 +10,119 @@ ld_runtime_paths = $
   -Wl,-rpath,/opt/swift/libopaque-0.99.7/lib
 
 cc = gcc
+sanitizer_flags = -fno-sanitize-recover -fno-omit-frame-pointer -fsanitize=address,undefined
+
 # Note: we use the same level of optimization for release and testing
-cflags = -O2 -Wall -Wextra -Werror -fPIC `pkg-config --cflags libsodium` $c_include_flags
-ldlibs = -lopaque `pkg-config --libs-only-l libsodium`
+common_cflags = -O2 -Wall -Wextra -Werror -fPIC  `pkg-config --cflags libsodium` $c_include_flags
+# Disallow symbol overriding (semantic interposition) for release and test
+release_cflags = $common_cflags -fno-semantic-interposition
+test_cflags = $release_cflags -g -DUNIT_TESTING
+# Temporarily allow symbol overriding for instrumentation/asan/ubsan
+instrumentation_cflags = $common_cflags $sanitizer_flags -g -DUNIT_TESTING
+
+release_ldlibs = -lopaque `pkg-config --libs-only-l libsodium`
+test_ldlibs = $release_ldlibs -lcmocka
+instrumentation_ldlibs = $test_ldlibs
 
 # Quality assurance flags:
 
 # - Pass `-Wl,--no-undefined` to detect any missing -l flags at build time
-# <https://stackoverflow.com/a/63981003>
+# Ref 1: <https://stackoverflow.com/a/2356393>
+# Ref 2: <https://stackoverflow.com/a/63981003>
+# Ref 3: <https://wiki.gentoo.org/wiki/Project:Quality_Assurance/-Wl,-z,defs_and_-Wl,--no-allow-shlib-undefined>
 
 # - Pass `no-as-needed` to ensure linking with the sodium library (disables "lazy" behavior)
+# This option is needed for the previous option (`-Wl,--no-undefined`) to work, ref:
 # <https://stackoverflow.com/a/62117174>
+# This option also disallows any unused/redundant `-l` flags
+# <https://wiki.gentoo.org/wiki/Project:Quality_Assurance/As-needed>
 # Use `ldd -r libCMediator.so` to verify
 
-# - Full RELRO (shown as `BIND_NOW` in `readelf -d` output)
+# - Full RELRO (`-Wl,-z,relro,-z,now`)
+# Shown as `BIND_NOW` in `readelf -d` output
 # <https://www.redhat.com/en/blog/hardening-elf-binaries-using-relocation-read-only-relro>
 
 # - Emit a reproducible build ID (`-Wl,--build-id`)
 
-ldflags = -export-dynamic -Wl,-soname,$soname $
+# - The following options disallow resolution-order-based monkey patching:
+# - Disallow LD_PRELOAD symbol override for the `.o` object: (cflag `-fno-semantic-interposition`)
+# - Turn on `DF_SYMBOLIC` in the ELF (ldflag `-Wl,-Bsymbolic`)
+# ... so that the loader will try to find symbols in the current library first
+# <https://refspecs.linuxbase.org/elf/gabi4+/ch5.dynamic.html>
+
+# Hide all symbols lacking an explicit visibility attribute (`-fvisibility=hidden`)
+
+common_ldflags = -export-dynamic -Wl,-soname,$soname $
   -Wl,--no-undefined -Wl,--no-as-needed -Wl,-z,relro,-z,now -Wl,--build-id $
   `pkg-config --libs-only-other libsodium` $
-  $ldlibs $ld_comptime_paths $ld_runtime_paths
+  $ld_comptime_paths $ld_runtime_paths
 
-test_sanitizer_flags = -fno-sanitize-recover -fno-omit-frame-pointer -fsanitize=address,undefined
+release_ldflags = $common_ldflags -Wl,-Bsymbolic -fvisibility=hidden
+test_ldflags = $release_ldflags
+# Temporarily allow symbol overriding for instrumentation/asan/ubsan
+instrumentation_ldflags = $common_ldflags $sanitizer_flags
 
 builddir = build
 
 rule build_object
-  command = $cc -std=c17 -c $cflags -o $out $in
+  description = Build release object: $in => $out
+  command = $cc -std=c17 -c $release_cflags -o $out $in
 
 rule build_object_test
-  command = $cc -std=c17 -c -g -DUNIT_TESTING $test_sanitizer_flags $cflags -o $out $in
+  description = Build test object: $in => $out
+  command = $cc -std=c17 -c $test_cflags -o $out $in
+
+rule build_object_instrumentation
+  description = Build instrumentation object: $in => $out
+  command = $cc -std=c17 -c $instrumentation_cflags -o $out $in
 
 rule build_so
-  command = $cc -std=c17 -shared $ldflags -o $out $in
+  description = Build release library: $out
+  # Link Order: The $ldlibs flag must appear AFTER the object files
+  command = $cc -std=c17 -shared $release_ldflags -o $out $in $release_ldlibs
 
 rule build_so_test
-  command = $cc -std=c17 $test_sanitizer_flags $ldflags -lcmocka -o $out $in
+  description = Build executable for testing: $out
+  # Link Order: The $ldlibs flag must appear AFTER the object files
+  command = $cc -std=c17 $test_ldflags -o $out $in $test_ldlibs
+
+rule build_so_instrumentation
+  description = Build executable for instrumentation: $out
+  # Link Order: The $ldlibs flags must appear AFTER the object files
+  command = $cc -std=c17 $instrumentation_ldflags -o $out $in $instrumentation_ldlibs
+
+rule create_symlink
+  command = ln -sr --force $in $out
 
 rule dump_build_config
+  description = Dump config to $out
   command = (echo cc: $cc ; $
-    echo cflags: $cflags ; $
-    echo ldflags: $ldflags ; $
-    echo test_sanitizer_flags: $test_sanitizer_flags ; $
+    echo release_cflags: $release_cflags ; $
+    echo release_ldflags: $release_ldflags ; $
+    echo release_ldlibs: $release_ldlibs ; $
+    echo ; $
+    echo test_cflags: $test_cflags ; $
+    echo test_ldflags: $test_ldflags ; $
+    echo test_ldlibs: $test_ldlibs ; $
+    echo ; $
+    echo instrumentation_cflags: $instrumentation_cflags ; $
+    echo instrumentation_ldflags: $instrumentation_ldflags ; $
+    echo instrumentation_ldlibs: $instrumentation_ldlibs ; $
+    echo ; $
     echo sha256: ; $
     shasum -a256 $in ; $
     echo END) >$out 2>$out
 
 build $builddir/CMediator.o: build_object CMediator.c
 build $builddir/test_CMediator.o: build_object_test CMediator.c
+build $builddir/sanitize_CMediator.o: build_object_instrumentation CMediator.c
 
-build $builddir/libCMediator.so: build_so $builddir/CMediator.o
+build $builddir/$soname: build_so $builddir/CMediator.o
 build $builddir/test_libCMediator: build_so_test $builddir/test_CMediator.o
+build $builddir/sanitize_libCMediator: build_so_instrumentation $builddir/sanitize_CMediator.o
+
+build $builddir/libCMediator.so: create_symlink $builddir/$soname
 
 build $builddir/build_config.log: dump_build_config $builddir/libCMediator.so
 build $builddir/test_config.log: dump_build_config $builddir/test_libCMediator
+build $builddir/instrumentation_config.log: dump_build_config $builddir/sanitize_libCMediator
