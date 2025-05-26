@@ -34,6 +34,19 @@ release_ldlibs = -lopaque `pkg-config --libs-only-l libsodium`
 test_ldlibs = $release_ldlibs -lcmocka
 instrumentation_ldlibs = $test_ldlibs
 
+common_ldflags = -Wl,-soname,$soname $
+  -Wl,--no-undefined -Wl,--no-as-needed -Wl,-z,relro,-z,now -Wl,--build-id $
+  -Wl,--no-copy-dt-needed-entries $
+  `pkg-config --libs-only-other libsodium` $
+  $ld_comptime_paths $ld_runtime_paths
+
+# Disallow symbol overriding (semantic interposition) for release and test
+release_ldflags = $common_ldflags -Wl,-Bsymbolic -fvisibility=hidden
+test_ldflags = $release_ldflags
+# Temporarily allow symbol overriding for instrumentation/asan/ubsan
+instrumentation_ldflags = $common_ldflags $sanitizer_shared_flags -Wl,--export-dynamic
+
+
 # Quality assurance flags:
 
 # - Pass `-Wl,--no-undefined` to detect any missing -l flags at build time
@@ -62,15 +75,6 @@ instrumentation_ldlibs = $test_ldlibs
 
 # Hide all symbols lacking an explicit visibility attribute (`-fvisibility=hidden`)
 
-common_ldflags = -export-dynamic -Wl,-soname,$soname $
-  -Wl,--no-undefined -Wl,--no-as-needed -Wl,-z,relro,-z,now -Wl,--build-id $
-  `pkg-config --libs-only-other libsodium` $
-  $ld_comptime_paths $ld_runtime_paths
-
-release_ldflags = $common_ldflags -Wl,-Bsymbolic -fvisibility=hidden
-test_ldflags = $release_ldflags
-# Temporarily allow symbol overriding for instrumentation/asan/ubsan
-instrumentation_ldflags = $common_ldflags $sanitizer_flags
 
 builddir = build
 
