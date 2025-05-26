@@ -129,22 +129,22 @@ rule create_symlink
 
 rule dump_build_config
   description = Dump config to $out
-  command = (echo cc: $cc ; $
-    echo release_cflags: $release_cflags ; $
-    echo release_ldflags: $release_ldflags ; $
-    echo release_ldlibs: $release_ldlibs ; $
+  command = (echo cc: $cc "\n"; $
+    echo release_cflags: $release_cflags "\n"; $
+    echo release_ldflags: $release_ldflags "\n"; $
+    echo release_ldlibs: $release_ldlibs "\n"; $
     echo ; $
-    echo test_cflags: $test_cflags ; $
-    echo test_ldflags: $test_ldflags ; $
-    echo test_ldlibs: $test_ldlibs ; $
+    echo test_cflags: $test_cflags "\n"; $
+    echo test_ldflags: $test_ldflags "\n"; $
+    echo test_ldlibs: $test_ldlibs "\n"; $
     echo ; $
-    echo instrumentation_cflags: $instrumentation_cflags ; $
-    echo instrumentation_ldflags: $instrumentation_ldflags ; $
-    echo instrumentation_ldlibs: $instrumentation_ldlibs ; $
+    echo instrumentation_cflags: $instrumentation_cflags "\n"; $
+    echo instrumentation_ldflags: $instrumentation_ldflags "\n"; $
+    echo instrumentation_ldlibs: $instrumentation_ldlibs "\n"; $
     echo ; $
     echo sha256: ; $
-    shasum -a256 $in ; $
-    echo END) >$out 2>$out
+    sha256sum -- $in ; $
+    echo END) 2>&1 1>$out
 
 build $builddir/CMediator.o: build_object CMediator.c
 build $builddir/test_CMediator.o: build_object_test CMediator.c
@@ -156,6 +156,6 @@ build $builddir/sanitize_libCMediator: build_so_instrumentation $builddir/saniti
 
 build $builddir/libCMediator.so: create_symlink $builddir/$soname
 
-build $builddir/build_config.log: dump_build_config $builddir/libCMediator.so
+build $builddir/build_config.log: dump_build_config $builddir/libCMediator.so $builddir/$soname
 build $builddir/test_config.log: dump_build_config $builddir/test_libCMediator
 build $builddir/instrumentation_config.log: dump_build_config $builddir/sanitize_libCMediator
