@@ -49,30 +49,49 @@ instrumentation_ldflags = $common_ldflags $sanitizer_shared_flags -Wl,--export-d
 
 # Quality assurance flags:
 
-# - Pass `-Wl,--no-undefined` to detect any missing -l flags at build time
-# Ref 1: <https://stackoverflow.com/a/2356393>
-# Ref 2: <https://stackoverflow.com/a/63981003>
-# Ref 3: <https://wiki.gentoo.org/wiki/Project:Quality_Assurance/-Wl,-z,defs_and_-Wl,--no-allow-shlib-undefined>
+# - Stack protections:
+# - Memcpy etc. bounds check (`-D_FORTIFY_SOURCE=2`)
+# - ROP mitigations (`-fcf-protection -fno-trampolines`)
+# - Guard page jumping mitigation (`-fstack-clash-protection`)
+# - Stack canary (`-fstack-protector-strong`)
 
-# - Pass `no-as-needed` to ensure linking with the sodium library (disables "lazy" behavior)
-# This option is needed for the previous option (`-Wl,--no-undefined`) to work, ref:
-# <https://stackoverflow.com/a/62117174>
-# This option also disallows any unused/redundant `-l` flags
-# <https://wiki.gentoo.org/wiki/Project:Quality_Assurance/As-needed>
+
+# Quality assurance linker flags:
+
+# - Pass `-Wl,--no-undefined` to detect any missing -l flags at build time
+# [Ref 1]: <https://stackoverflow.com/a/2356393>
+# [Ref 2]: <https://stackoverflow.com/a/63981003>
+# [Ref 3]: <https://wiki.gentoo.org/wiki/Project:Quality_Assurance/-Wl,-z,defs_and_-Wl,--no-allow-shlib-undefined>
+
+# - Pass `-Wl,--no-as-needed` to ensure linking with the sodium library (disables "lazy" behavior)
+# This option shall be used together with the previous option (`-Wl,--no-undefined`)
+# [Ref 1]: <https://stackoverflow.com/a/62117174>
+# Also disallows any unused/redundant `-l` flags
+# [Ref 2]: <https://wiki.gentoo.org/wiki/Project:Quality_Assurance/As-needed>
 # Use `ldd -r libCMediator.so` to verify
 
 # - Full RELRO (`-Wl,-z,relro,-z,now`)
 # Shown as `BIND_NOW` in `readelf -d` output
-# <https://www.redhat.com/en/blog/hardening-elf-binaries-using-relocation-read-only-relro>
+# [Ref]: <https://www.redhat.com/en/blog/hardening-elf-binaries-using-relocation-read-only-relro>
 
 # - Emit a reproducible build ID (`-Wl,--build-id`)
 
-# - The following options disallow resolution-order-based monkey patching:
-# - Disallow LD_PRELOAD symbol override for the `.o` object: (cflag `-fno-semantic-interposition`)
-# - Turn on `DF_SYMBOLIC` in the ELF (ldflag `-Wl,-Bsymbolic`)
-# ... so that the loader will try to find symbols in the current library first
-# <https://refspecs.linuxbase.org/elf/gabi4+/ch5.dynamic.html>
+# - Do not import symbols from secondary dependencies (`-Wl,--no-copy-dt-needed-entries`)
+# [Ref]: <https://wiki.debian.org/ToolChain/DSOLinking>
 
+# - The following options disallow resolution-order-based monkey patching:
+# a) Per-shared-object:
+# Turn on `DF_SYMBOLIC` in the ELF (ldflag `-Wl,-Bsymbolic`)
+# ... so that the loader will try to resolve symbols in the current shared object (`.so`) first
+# [Ref 1]: <https://refspecs.linuxbase.org/elf/gabi4+/ch5.dynamic.html>
+# [Ref 2]: <https://linux.die.net/man/1/ld>
+# [Ref 3]: <https://www.technovelty.org/c/what-exactly-does-bsymblic-do-update.html>
+# b) Per-TU:
+# Assume that LD_PRELOAD override functions implement the same semantics: (cflag `-fno-semantic-interposition`)
+# This is an optimization flag.
+# [Ref 4]: <https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html>
+
+# - Make symbols private by default:
 # Hide all symbols lacking an explicit visibility attribute (`-fvisibility=hidden`)
 
 
