@@ -16,3 +16,17 @@ build/
 
 # Ninja build system
 .ninja_*
+
+# Python
+__pycache__
+*.pyc
+pip-log.txt
+.ipynb_checkpoints
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pytype
+.pytype/
