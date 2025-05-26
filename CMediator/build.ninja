@@ -10,15 +10,25 @@ ld_runtime_paths = $
   -Wl,-rpath,/opt/swift/libopaque-0.99.7/lib
 
 cc = gcc
-sanitizer_flags = -fno-sanitize-recover -fno-omit-frame-pointer -fsanitize=address,undefined
+
+warning_cflags = -Wall -Wextra -Werror $
+  -Wbad-function-cast -Wcast-align=strict -Wcast-qual -Wmissing-include-dirs -Wpointer-arith -Wsign-conversion $
+  -Wstrict-prototypes -Wundef
+
+hardening_cflags = -D_FORTIFY_SOURCE=2 $
+  -fcf-protection -fno-trampolines -fstack-clash-protection -fstack-protector-strong
+
+sanitizer_shared_flags = -fno-omit-frame-pointer -fno-sanitize-recover -fsanitize=address,undefined
 
 # Note: we use the same level of optimization for release and testing
-common_cflags = -O2 -Wall -Wextra -Werror -fPIC  `pkg-config --cflags libsodium` $c_include_flags
+common_cflags = -O2 -g $warning_cflags $hardening_cflags $
+  `pkg-config --cflags libsodium` $c_include_flags
+
 # Disallow symbol overriding (semantic interposition) for release and test
 release_cflags = $common_cflags -fno-semantic-interposition
-test_cflags = $release_cflags -g -DUNIT_TESTING
+test_cflags = $release_cflags -DUNIT_TESTING
 # Temporarily allow symbol overriding for instrumentation/asan/ubsan
-instrumentation_cflags = $common_cflags $sanitizer_flags -g -DUNIT_TESTING
+instrumentation_cflags = $common_cflags $sanitizer_shared_flags -DUNIT_TESTING
 
 release_ldlibs = -lopaque `pkg-config --libs-only-l libsodium`
 test_ldlibs = $release_ldlibs -lcmocka
