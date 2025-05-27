@@ -21,11 +21,11 @@ hardening_cflags = -D_FORTIFY_SOURCE=2 $
 sanitizer_shared_flags = -fno-omit-frame-pointer -fno-sanitize-recover -fsanitize=address,undefined
 
 # Note: we use the same level of optimization for release and testing
-common_cflags = -O2 -g $warning_cflags $hardening_cflags $
+common_cflags = -O2 -g -fPIC $warning_cflags $hardening_cflags $
   `pkg-config --cflags libsodium` $c_include_flags
 
 # Disallow symbol overriding (semantic interposition) for release and test
-release_cflags = $common_cflags -fno-semantic-interposition
+release_cflags = $common_cflags -fno-plt -fno-semantic-interposition
 test_cflags = $release_cflags -DUNIT_TESTING
 # Temporarily allow symbol overriding for instrumentation/asan/ubsan
 instrumentation_cflags = $common_cflags $sanitizer_shared_flags -DUNIT_TESTING
