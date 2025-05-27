@@ -16,7 +16,8 @@ warning_cflags = -Wall -Wextra -Werror $
   -Wstrict-prototypes -Wundef
 
 hardening_cflags = -D_FORTIFY_SOURCE=2 $
-  -fcf-protection -fno-trampolines -fstack-clash-protection -fstack-protector-strong
+  -fcf-protection -fno-trampolines -fstack-clash-protection -fstack-protector-strong $
+  -fwrapv
 
 sanitizer_shared_flags = -fno-omit-frame-pointer -fno-sanitize-recover -fsanitize=address,undefined
 
@@ -25,7 +26,7 @@ common_cflags = -O2 -g -fPIC $warning_cflags $hardening_cflags $
   `pkg-config --cflags libsodium` $c_include_flags
 
 # Disallow symbol overriding (semantic interposition) for release and test
-release_cflags = $common_cflags -fno-plt -fno-semantic-interposition
+release_cflags = $common_cflags -fno-plt -fno-semantic-interposition -fvisibility=hidden
 test_cflags = $release_cflags -DUNIT_TESTING
 # Temporarily allow symbol overriding for instrumentation/asan/ubsan
 instrumentation_cflags = $common_cflags $sanitizer_shared_flags -DUNIT_TESTING
@@ -54,6 +55,9 @@ instrumentation_ldflags = $common_ldflags $sanitizer_shared_flags -Wl,--export-d
 # - ROP mitigations (`-fcf-protection -fno-trampolines`)
 # - Guard page jumping mitigation (`-fstack-clash-protection`)
 # - Stack canary (`-fstack-protector-strong`)
+
+# - When optimizing, ensure that signed ints have 2's complement behavior (`-fwrapv`)
+# [Ref]: <https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html>
 
 
 # Quality assurance linker flags:
