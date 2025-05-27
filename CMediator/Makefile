@@ -27,7 +27,7 @@ test: default
 	if [ -t 0 ] && [ -t 1 ]; then _isTerminal='1'; fi
 	if [ "$$_isTerminal" -eq 0 ]; then _batchArgs+=' --batch'; fi
 	if [ "$$_isTerminal" -eq 0 ]; then echo "- Starting GDB in batch mode"; fi
-	gdb -return-child-result -q $$_batchArgs -ex='r' -ex='q' --args ./build/test_libCMediator
+	gdb -return-child-result -q $$_batchArgs -ex='r' -ex='bt full' -ex='q' --args ./build/test_libCMediator
 
 sanitize: default
 	@set -euo pipefail
