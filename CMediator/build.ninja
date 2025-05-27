@@ -125,19 +125,34 @@ rule build_so_instrumentation
   command = $cc -std=c17 $instrumentation_ldflags -o $out $in $instrumentation_ldlibs
 
 rule create_symlink
+  description = Create relative symlink: $out
   command = ln -sr --force $in $out
 
-rule dump_build_config
-  description = Dump config to $out
+rule dump_config_release
+  description = Dump release config to $out
   command = (echo cc: $cc "\n"; $
     echo release_cflags: $release_cflags "\n"; $
     echo release_ldflags: $release_ldflags "\n"; $
     echo release_ldlibs: $release_ldlibs "\n"; $
     echo ; $
+    echo sha256: ; $
+    sha256sum -- $in ; $
+    echo END) 2>&1 1>$out
+
+rule dump_config_test
+  description = Dump test config to $out
+  command = (echo cc: $cc "\n"; $
     echo test_cflags: $test_cflags "\n"; $
     echo test_ldflags: $test_ldflags "\n"; $
     echo test_ldlibs: $test_ldlibs "\n"; $
     echo ; $
+    echo sha256: ; $
+    sha256sum -- $in ; $
+    echo END) 2>&1 1>$out
+
+rule dump_config_instrumentation
+  description = Dump instrumentation config to $out
+  command = (echo cc: $cc "\n"; $
     echo instrumentation_cflags: $instrumentation_cflags "\n"; $
     echo instrumentation_ldflags: $instrumentation_ldflags "\n"; $
     echo instrumentation_ldlibs: $instrumentation_ldlibs "\n"; $
@@ -156,6 +171,6 @@ build $builddir/sanitize_libCMediator: build_so_instrumentation $builddir/saniti
 
 build $builddir/libCMediator.so: create_symlink $builddir/$soname
 
-build $builddir/build_config.log: dump_build_config $builddir/libCMediator.so $builddir/$soname
-build $builddir/test_config.log: dump_build_config $builddir/test_libCMediator
-build $builddir/instrumentation_config.log: dump_build_config $builddir/sanitize_libCMediator
+build $builddir/release_config.log: dump_config_release $builddir/libCMediator.so $builddir/$soname
+build $builddir/test_config.log: dump_config_test $builddir/test_libCMediator
+build $builddir/instrumentation_config.log: dump_config_instrumentation $builddir/sanitize_libCMediator
