@@ -6,19 +6,19 @@
 #include "CMediatorPrivate/Prefixing.h"
 
 // libsodium
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(const_crypto_core_ristretto255_BYTES);
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(const_crypto_scalarmult_SCALARBYTES);
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(const_crypto_secretbox_KEYBYTES);
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(const_crypto_secretbox_MACBYTES);
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(const_crypto_secretbox_NONCEBYTES);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_core_ristretto255_BYTES);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_scalarmult_SCALARBYTES);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_secretbox_KEYBYTES);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_secretbox_MACBYTES);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_secretbox_NONCEBYTES);
 
 // libopaque
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(const_OPAQUE_REGISTER_PUBLIC_LEN);
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(const_OPAQUE_REGISTER_SECRET_LEN);
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(const_OPAQUE_REGISTRATION_RECORD_LEN);
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(const_OPAQUE_USER_RECORD_LEN);
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(sizeof_Opaque_Ids);
-extern const CYTH_WRAP_EXPORT uint16_t Wrap(alignof_Opaque_Ids);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_OPAQUE_REGISTER_PUBLIC_LEN);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_OPAQUE_REGISTER_SECRET_LEN);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_OPAQUE_REGISTRATION_RECORD_LEN);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_OPAQUE_USER_RECORD_LEN);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(sizeof_Opaque_Ids);
+extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(alignof_Opaque_Ids);
 
 // initializer for libsodium
 CYTH_WRAP_EXPORT int Wrap(sodium_init)(void);
