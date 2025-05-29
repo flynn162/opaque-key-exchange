@@ -5,6 +5,9 @@
 // Wrap
 #include "CMediatorPrivate/Prefixing.h"
 
+#define CythWrap_likely(x)    __builtin_expect(!!(x), 1)
+#define CythWrap_unlikely(x)  __builtin_expect(!!(x), 0)
+
 // libsodium
 extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_core_ristretto255_BYTES);
 extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_scalarmult_SCALARBYTES);

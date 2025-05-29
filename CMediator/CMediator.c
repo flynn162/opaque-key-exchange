@@ -162,11 +162,11 @@ void Wrap(sodium_memzero)(void* const pnt, const size_t len)
 const char* Wrap(Ex01_crypto_secretbox_keygen)(unsigned char k[], unsigned long long klen)
 {
     // null checks
-    if (NULL == k) {
+    if (CythWrap_unlikely(NULL == k)) {
         return "5: k is null";
     }
     // length checks
-    if (klen != crypto_secretbox_KEYBYTES) {
+    if (CythWrap_unlikely(klen != crypto_secretbox_KEYBYTES)) {
         return "5: Wrong key size: klen != KEYBYTES";
     }
     crypto_secretbox_keygen(k);
@@ -176,7 +176,7 @@ const char* Wrap(Ex01_crypto_secretbox_keygen)(unsigned char k[], unsigned long 
 const char* Wrap(Ex01_randombytes_buf)(void* const buf, const size_t size)
 {
     // null checks
-    if (NULL == buf) {
+    if (CythWrap_unlikely(NULL == buf)) {
         return "5: buf is null";
     }
     randombytes_buf(buf, size);
@@ -194,22 +194,22 @@ const char* Wrap(Ex01_crypto_secretbox_easy)(
     unsigned long long klen)
 {
     // null checks
-    if ((NULL == c) | (NULL == m) | (NULL == n) | (NULL == k)) {
+    if (CythWrap_unlikely((NULL == c) | (NULL == m) | (NULL == n) | (NULL == k))) {
         return "5: One of {c, m, n, k} is null";
     }
     // length checks
-    if (clen < mlen || clen - mlen < crypto_secretbox_MACBYTES) {
+    if (CythWrap_unlikely(clen < mlen || clen - mlen < crypto_secretbox_MACBYTES)) {
         return "5: clen should be at least MACBYTES + mlen";
     }
-    if (nlen != crypto_secretbox_NONCEBYTES) {
+    if (CythWrap_unlikely(nlen != crypto_secretbox_NONCEBYTES)) {
         return "5: Wrong nonce size: nlen != NONCEBYTES";
     }
-    if (klen != crypto_secretbox_KEYBYTES) {
+    if (CythWrap_unlikely(klen != crypto_secretbox_KEYBYTES)) {
         return "5: Wrong key size: klen != KEYBYTES";
     }
 
     int result = crypto_secretbox_easy(c, m, mlen, n, k);
-    if (0 == result) {
+    if (CythWrap_likely(0 == result)) {
         return NULL;
     } else {
         return "5: Encryption failed!";
@@ -227,22 +227,22 @@ const char* Wrap(Ex01_crypto_secretbox_open_easy)(
     unsigned long long klen)
 {
     // null checks
-    if ((NULL == m) | (NULL == c) | (NULL == n) | (NULL == k)) {
+    if (CythWrap_unlikely((NULL == m) | (NULL == c) | (NULL == n) | (NULL == k))) {
         return "5: One of {m, c, n, k} is null";
     }
     // checks if crypto_secretbox_MACBYTES + mlen != clen
-    if (clen < mlen || clen - mlen != crypto_secretbox_MACBYTES) {
+    if (CythWrap_unlikely(clen < mlen || clen - mlen != crypto_secretbox_MACBYTES)) {
         return "4: Wrong ciphertext size: clen != MACBYTES + mlen";
     }
-    if (nlen != crypto_secretbox_NONCEBYTES) {
+    if (CythWrap_unlikely(nlen != crypto_secretbox_NONCEBYTES)) {
         return "5: Wrong nonce size: nlen != NONCEBYTES";
     }
-    if (klen != crypto_secretbox_KEYBYTES) {
+    if (CythWrap_unlikely(klen != crypto_secretbox_KEYBYTES)) {
         return "5: Wrong key size: klen != KEYBYTES";
     }
 
     int result = crypto_secretbox_open_easy(m, c, clen, n, k);
-    if (0 == result) {
+    if (CythWrap_likely(0 == result)) {
         return NULL;
     } else {
         return "4: Decryption failed!";
@@ -263,25 +263,25 @@ const char* Wrap(Ex01_opaque_CreateRegistrationResponse)(
     uint16_t pub_len)
 {
     // null checks
-    if ((NULL == request) | (NULL == skS) | (NULL == sec_out) | (NULL == pub_out)) {
+    if (CythWrap_unlikely((NULL == request) | (NULL == skS) | (NULL == sec_out) | (NULL == pub_out))) {
         return "5: One of {request, skS, sec_out, pub_out} is null";
     }
     // length checks
-    if (request_len != crypto_core_ristretto255_BYTES) {
+    if (CythWrap_unlikely(request_len != crypto_core_ristretto255_BYTES)) {
         return "4: Wrong size for blinded request: request_len != ristretto255_BYTES";
     }
-    if (skS_len != crypto_scalarmult_SCALARBYTES) {
+    if (CythWrap_unlikely(skS_len != crypto_scalarmult_SCALARBYTES)) {
         return "5: Wrong size for server context: skS_len != scalarmult_SCALARBYTES";
     }
-    if (sec_len != OPAQUE_REGISTER_SECRET_LEN) {
+    if (CythWrap_unlikely(sec_len != OPAQUE_REGISTER_SECRET_LEN)) {
         return "5: sec_len";
     }
-    if (pub_len != OPAQUE_REGISTER_PUBLIC_LEN) {
+    if (CythWrap_unlikely(pub_len != OPAQUE_REGISTER_PUBLIC_LEN)) {
         return "5: pub_len";
     }
 
     int result = opaque_CreateRegistrationResponse(request, skS, sec_out, pub_out);
-    if (0 == result) {
+    if (CythWrap_likely(0 == result)) {
         return NULL;
     } else {
         return "4: Failed to create registration response";
@@ -298,17 +298,17 @@ const char* Wrap(Ex01_opaque_StoreUserRecord)(
     uint64_t rec_len)
 {
     // null checks
-    if ((NULL == sec) | (NULL == recU) | (NULL == rec_out)) {
+    if (CythWrap_unlikely((NULL == sec) | (NULL == recU) | (NULL == rec_out))) {
         return "5: One of {sec, recU, rec_out} is null";
     }
     // length checks
-    if (sec_len != OPAQUE_REGISTER_SECRET_LEN) {
+    if (CythWrap_unlikely(sec_len != OPAQUE_REGISTER_SECRET_LEN)) {
         return "5: Wrong size for server secret: sec_len";
     }
-    if (recU_len != OPAQUE_REGISTRATION_RECORD_LEN) {
+    if (CythWrap_unlikely(recU_len != OPAQUE_REGISTRATION_RECORD_LEN)) {
         return "4: Wrong size for registration record: recU_len";
     }
-    if (rec_len != OPAQUE_USER_RECORD_LEN) {
+    if (CythWrap_unlikely(rec_len != OPAQUE_USER_RECORD_LEN)) {
         return "5: rec_len";
     }
 
@@ -323,13 +323,13 @@ const char* Wrap(Opaque_Ids_init_nostrcopy)(
     uint16_t idS_len_u16,
     uint8_t* idS)
 {
-    if ((NULL == selfVoidP) | (NULL == idU) | (NULL == idS)) {
+    if (CythWrap_unlikely((NULL == selfVoidP) | (NULL == idU) | (NULL == idS))) {
         return "5: One of {selfVoidP, idU, idS} is null";
     }
-    if (0 == idU_len_u16) {
+    if (CythWrap_unlikely(0 == idU_len_u16)) {
         return "5: idU cannot be empty";
     }
-    if (0 == idS_len_u16) {
+    if (CythWrap_unlikely(0 == idS_len_u16)) {
         return "5: idS cannot be empty";
     }
     // create a shallow copy
@@ -364,29 +364,29 @@ const char* Wrap(Ex01_opaque_CreateCredentialResponse)(
     uint64_t sk_len_u64,
     uint64_t authU_len_u64)
 {
-    if (
-        /* input */ ((NULL == ids) | (NULL == ke1) | (NULL == rec) | (NULL == ctx)) |
-        /* output */ ((NULL == ke2_out) | (NULL == sk_out) | (NULL == authU_out))) {
+    if (CythWrap_unlikely(
+            /* input */ ((NULL == ids) | (NULL == ke1) | (NULL == rec) | (NULL == ctx)) |
+            /* output */ ((NULL == ke2_out) | (NULL == sk_out) | (NULL == authU_out)))) {
         return "5: One of {ids, ke1, rec, ctx, ke2_out, sk_out, authU_out} is null";
     }
     // input lengths
-    if (ke1_len_u64 != OPAQUE_USER_SESSION_PUBLIC_LEN) {
+    if (CythWrap_unlikely(ke1_len_u64 != OPAQUE_USER_SESSION_PUBLIC_LEN)) {
         return "4: Wrong size for credential request: ke1_len_u64";
     }
-    if (rec_len_u64 != OPAQUE_USER_RECORD_LEN) {
+    if (CythWrap_unlikely(rec_len_u64 != OPAQUE_USER_RECORD_LEN)) {
         return "5: rec_len_u64, OPAQUE_USER_RECORD_LEN";
     }
-    if (ctx_len_u64 > 0xFFFF) {
+    if (CythWrap_unlikely(ctx_len_u64 > 0xFFFF)) {
         return "5: ctx_len could not be fit into 16 bits";
     }
     // output lengths
-    if (ke2_len_u64 != OPAQUE_SERVER_SESSION_LEN) {
+    if (CythWrap_unlikely(ke2_len_u64 != OPAQUE_SERVER_SESSION_LEN)) {
         return "5: ke2_len_u64, OPAQUE_SERVER_SESSION_LEN";
     }
-    if (sk_len_u64 != OPAQUE_SHARED_SECRETBYTES) {
+    if (CythWrap_unlikely(sk_len_u64 != OPAQUE_SHARED_SECRETBYTES)) {
         return "5: sk_len_u64, OPAQUE_SHARED_SECRETBYTES";
     }
-    if (authU_len_u64 != crypto_auth_hmacsha512_BYTES) {
+    if (CythWrap_unlikely(authU_len_u64 != crypto_auth_hmacsha512_BYTES)) {
         return "5: authU_len_u64, crypto_auth_hmacsha512_BYTES";
     }
 
@@ -401,7 +401,7 @@ const char* Wrap(Ex01_opaque_CreateCredentialResponse)(
         ke2_out,
         sk_out,
         authU_out);
-    if (result != 0) {
+    if (CythWrap_unlikely(result != 0)) {
         return "4: Could not create credential response";
     }
     return NULL;
@@ -414,18 +414,18 @@ const char* Wrap(Ex01_opaque_UserAuth)(
     uint64_t authU0_len,
     uint64_t authU_len)
 {
-    if ((NULL == authU0) | (NULL == authU)) {
+    if (CythWrap_unlikely((NULL == authU0) | (NULL == authU))) {
         return "5: One of {authU0, authU} is null";
     }
-    if (authU0_len != crypto_auth_hmacsha512_BYTES) {
+    if (CythWrap_unlikely(authU0_len != crypto_auth_hmacsha512_BYTES)) {
         return "5: Wrong size for authU0: authU0_len != hmacsha512_BYTES";
     }
-    if (authU_len != crypto_auth_hmacsha512_BYTES) {
+    if (CythWrap_unlikely(authU_len != crypto_auth_hmacsha512_BYTES)) {
         return "4: Wrong size for user-sent authU: authU_len != hmacsha512_BYTES";
     }
 
     int result = opaque_UserAuth(authU0, authU);
-    if (result != 0) {
+    if (CythWrap_unlikely(result != 0)) {
         return "4: Could not authenticate user";
     }
     return NULL;
