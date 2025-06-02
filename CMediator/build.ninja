@@ -141,7 +141,7 @@ rule dump_config_release
     echo ; $
     echo sha256: ; $
     sha256sum -- $in ; $
-    echo END) 2>&1 1>$out
+    echo END) 1>$out 2>&1
 
 rule dump_config_test
   description = Dump test config to $out
@@ -152,7 +152,7 @@ rule dump_config_test
     echo ; $
     echo sha256: ; $
     sha256sum -- $in ; $
-    echo END) 2>&1 1>$out
+    echo END) 1>$out 2>&1
 
 rule dump_config_instrumentation
   description = Dump instrumentation config to $out
@@ -163,7 +163,7 @@ rule dump_config_instrumentation
     echo ; $
     echo sha256: ; $
     sha256sum -- $in ; $
-    echo END) 2>&1 1>$out
+    echo END) 1>$out 2>&1
 
 build $builddir/CMediator.o: build_object CMediator.c
 build $builddir/test_CMediator.o: build_object_test CMediator.c
@@ -178,3 +178,5 @@ build $builddir/libCMediator.so: create_symlink $builddir/$soname
 build $builddir/release_config.log: dump_config_release $builddir/libCMediator.so $builddir/$soname
 build $builddir/test_config.log: dump_config_test $builddir/test_libCMediator
 build $builddir/instrumentation_config.log: dump_config_instrumentation $builddir/sanitize_libCMediator
+# File list
+subninja files_sub.ninja
