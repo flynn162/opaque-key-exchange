@@ -12,11 +12,8 @@
     #error "Macro `Wrap` has been defined somewhere else."
 #endif
 
-#define CythWrapMyConcat2(X, Y) X ## Y
+#define CythWrapMyConcat2(X, Y) X##Y
 #define CythWrapMyConcat(X, Y) CythWrapMyConcat2(X, Y)
 
 // Latest internal major ABI version
 #define Wrap(x) CythWrapMyConcat2(CythWrapV01_, x)
-
-#define CYTH_WRAP_EXPORT_CONST __attribute__((externally_visible)) __attribute__((visibility("protected")))
-#define CYTH_WRAP_EXPORT CYTH_WRAP_EXPORT_CONST __attribute__((noinline))

@@ -6,5 +6,10 @@ ContinuationIndentWidth: 4
 IndentPPDirectives: BeforeHash
 IndentWidth: 4
 SortIncludes: Never
+
+# Macros
+StatementAttributeLikeMacros: [
+    'CythWrap_public',
+    'CythWrap_public_const'
+]
 TypenameMacros: ['Wrap']
-StatementAttributeLikeMacros: ['CYTH_WRAP_EXPORT']

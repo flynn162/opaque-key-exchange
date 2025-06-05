@@ -1,13 +1,13 @@
 #pragma once
-// IWYU pragma: private
 #ifndef CYTHWRAP_DEV_MODE
-#error "CYTHWRAP_DEV_MODE should have a value"
+    _Static_assert(0, //
+                   "CYTHWRAP_DEV_MODE should have a value");
 #endif
 
 #include <stddef.h>
 #include <stdint.h>
 #include "Prefixing.h"
-#include "Vis.h"
+#include "Vis.h" // IWYU pragma: export
 
 // libsodium
 extern const CythWrap_public_const uint16_t Wrap(const_crypto_core_ristretto255_BYTES);
