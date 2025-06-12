@@ -1,12 +1,18 @@
 // standard headers
-#include <stddef.h>
 #include <stdalign.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
+
 // dependency headers
-#include <sodium.h>
 #include <opaque.h>
+#include <sodium.h>
+
 // private headers
-#include "CMediator.h"
+#include "CMediatorPrivate/Prefixing.h"
+
+// the last header should be the Dev header
+#include "CMediatorPrivate/Dev.h"
 
 #if __STDC_VERSION__ != 201710L
     #error "This file uses the C17 standard"
