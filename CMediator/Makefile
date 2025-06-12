@@ -37,7 +37,7 @@ sanitize: default
 clean:
 	@set -euo pipefail
 	echo '[make $@]'
-	rm -vf  build/*.o  build/lib*.so  build/lib*.so.*  build/sanitize_lib*  build/test_lib*
+	rm -vf  build/*.d  build/*.o  build/lib*.so  build/lib*.so.*  build/sanitize_lib*  build/test_lib*
 	[ "$$(ls -A build/)" ] && echo "- Build directory is not empty" || (env TZ=UTC ls -laR --time-style=iso build/ ; echo "- Done")
 
 clean_logs:
