@@ -1,0 +1,29 @@
+build $builddir/CMediator.o: build_object CMediator.c
+build $builddir/CMediator.sanitize.o: build_object_instrumentation CMediator.c
+
+build $builddir/Test.Main.o: build_object_test Test/Main.c
+build $builddir/Test.Main.sanitize.o: build_object_instrumentation Test/Main.c
+
+build $builddir/Test.TestBasic.o: build_object_test Test/TestBasic.c
+build $builddir/Test.TestBasic.sanitize.o: build_object_instrumentation Test/TestBasic.c
+
+
+build $builddir/$soname: build_so $
+    $builddir/CMediator.o
+
+build $builddir/test_libCMediator: build_so_test $
+    $builddir/Test.Main.o $
+    $builddir/Test.TestBasic.o $
+    || $builddir/libCMediator.so
+
+build $builddir/sanitize_libCMediator: build_so_instrumentation $
+    $builddir/CMediator.sanitize.o $
+    $builddir/Test.Main.sanitize.o $
+    $builddir/Test.TestBasic.sanitize.o $
+    || $builddir/libCMediator.so
+
+
+build $builddir/libCMediator.so: create_symlink $builddir/$soname
+build $builddir/release_config.log: dump_config_release $builddir/libCMediator.so $builddir/$soname
+build $builddir/test_config.log: dump_config_test $builddir/test_libCMediator
+build $builddir/instrumentation_config.log: dump_config_instrumentation $builddir/sanitize_libCMediator
