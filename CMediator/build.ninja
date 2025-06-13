@@ -31,19 +31,21 @@ test_cflags = $release_cflags -DUNIT_TESTING
 # Temporarily allow symbol overriding for instrumentation/asan/ubsan
 instrumentation_cflags = $common_cflags $sanitizer_shared_flags -DUNIT_TESTING
 
-release_ldlibs = -lopaque `pkg-config --libs-only-l libsodium`
-test_ldlibs = $release_ldlibs -lcmocka
-instrumentation_ldlibs = $test_ldlibs
+common_ldlibs = `pkg-config --libs-only-l libsodium` -lopaque
+release_ldlibs = $common_ldlibs
+# Don't put `-lc` in instrumentation and test libs. Just let the compiler autofill.
+instrumentation_ldlibs = $common_ldlibs -lcmocka
+test_ldlibs = -lCMediator -lcmocka
 
-common_ldflags = -Wl,-soname,$soname $
+common_ldflags = $
   -Wl,--no-undefined -Wl,--no-as-needed -Wl,-z,relro,-z,now -Wl,--build-id $
   -Wl,--no-copy-dt-needed-entries $
   `pkg-config --libs-only-other libsodium` $
   $ld_comptime_paths $ld_runtime_paths
 
 # Disallow symbol overriding (semantic interposition) for release and test
-release_ldflags = $common_ldflags -Wl,-Bsymbolic -fvisibility=hidden
-test_ldflags = $release_ldflags
+release_ldflags = $common_ldflags -Wl,-Bsymbolic -fvisibility=hidden  -Wl,-soname,$soname
+test_ldflags    = $common_ldflags -Wl,-Bsymbolic -fvisibility=hidden  -L./build/ -Wl,-rpath,'$$'ORIGIN
 # Temporarily allow symbol overriding for instrumentation/asan/ubsan
 instrumentation_ldflags = $common_ldflags $sanitizer_shared_flags -Wl,--export-dynamic
 
@@ -69,10 +71,12 @@ instrumentation_ldflags = $common_ldflags $sanitizer_shared_flags -Wl,--export-d
 
 # - Pass `-Wl,--no-as-needed` to ensure linking with the sodium library (disables "lazy" behavior)
 # This option shall be used together with the previous option (`-Wl,--no-undefined`)
+# Forces "do what I say" behavior - the flag will unconditionally add all `-l` libraries to DT_NEEDED
 # [Ref 1]: <https://stackoverflow.com/a/62117174>
-# Also disallows any unused/redundant `-l` flags
-# [Ref 2]: <https://wiki.gentoo.org/wiki/Project:Quality_Assurance/As-needed>
-# Use `ldd -r libCMediator.so` to verify
+# [Ref 2]: <https://stackoverflow.com/q/79405331>
+# [Ref 3]: <https://linux.die.net/man/1/ld>
+# Use `objdump -p build/*.so` or `readelf -d build/*.so` to verify
+# [Ref 4]: <https://notes.secretsauce.net/notes/2017/02/02_detecting-missing-dtneeded-tags.html>
 
 # - Full RELRO (`-Wl,-z,relro,-z,now`)
 # Shown as `BIND_NOW` in `readelf -d` output
@@ -80,7 +84,7 @@ instrumentation_ldflags = $common_ldflags $sanitizer_shared_flags -Wl,--export-d
 
 # - Emit a reproducible build ID (`-Wl,--build-id`)
 
-# - Do not import symbols from secondary dependencies (`-Wl,--no-copy-dt-needed-entries`)
+# - Do not add indirect dependencies to the DT_NEEDED list (`-Wl,--no-copy-dt-needed-entries`)
 # [Ref]: <https://wiki.debian.org/ToolChain/DSOLinking>
 
 # - The following options disallow resolution-order-based monkey patching:
@@ -94,24 +98,34 @@ instrumentation_ldflags = $common_ldflags $sanitizer_shared_flags -Wl,--export-d
 # Assume that LD_PRELOAD override functions implement the same semantics: (cflag `-fno-semantic-interposition`)
 # This is an optimization flag.
 # [Ref 4]: <https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html>
+# `readelf -W --dyn-syms build/*.so`
+# `objdump -d build/*.so`
+# `LD_DEBUG=reloc:symbols:bindings ./build/test_lib* 1>&2 2>/tmp/ld-debug.txt`
 
 # - Make symbols private by default:
 # Hide all symbols lacking an explicit visibility attribute (`-fvisibility=hidden`)
+
+# Unsupported flags: (`-Wl,-Bgroup`)
+# Sets a flag in the binary but ld does not check it.
+# Glibc does not recognize RTLD_GROUP.
 
 
 builddir = build
 
 rule build_object
   description = Build release object: $in => $out
-  command = $cc -std=c17 -c $release_cflags -o $out $in
+  depfile = $out.d
+  command = $cc -MMD -MF $out.d -std=c17 -c $release_cflags -o $out $in
 
 rule build_object_test
   description = Build test object: $in => $out
-  command = $cc -std=c17 -c $test_cflags -o $out $in
+  depfile = $out.d
+  command = $cc -MMD -MF $out.d -std=c17 -c $test_cflags -o $out $in
 
 rule build_object_instrumentation
   description = Build instrumentation object: $in => $out
-  command = $cc -std=c17 -c $instrumentation_cflags -o $out $in
+  depfile = $out.d
+  command = $cc -MMD -MF $out.d -std=c17 -c $instrumentation_cflags -o $out $in
 
 rule build_so
   description = Build release library: $out
@@ -165,18 +179,5 @@ rule dump_config_instrumentation
     sha256sum -- $in ; $
     echo END) 1>$out 2>&1
 
-build $builddir/CMediator.o: build_object CMediator.c
-build $builddir/test_CMediator.o: build_object_test CMediator.c
-build $builddir/sanitize_CMediator.o: build_object_instrumentation CMediator.c
-
-build $builddir/$soname: build_so $builddir/CMediator.o
-build $builddir/test_libCMediator: build_so_test $builddir/test_CMediator.o
-build $builddir/sanitize_libCMediator: build_so_instrumentation $builddir/sanitize_CMediator.o
-
-build $builddir/libCMediator.so: create_symlink $builddir/$soname
-
-build $builddir/release_config.log: dump_config_release $builddir/libCMediator.so $builddir/$soname
-build $builddir/test_config.log: dump_config_test $builddir/test_libCMediator
-build $builddir/instrumentation_config.log: dump_config_instrumentation $builddir/sanitize_libCMediator
 # File list
 subninja files_sub.ninja
