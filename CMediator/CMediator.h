@@ -1,44 +1,45 @@
 #pragma once
+// IWYU pragma: private
+#ifndef CYTHWRAP_DEV_MODE
+#error "CYTHWRAP_DEV_MODE should have a value"
+#endif
 
 #include <stddef.h>
 #include <stdint.h>
-// Wrap
-#include "CMediatorPrivate/Prefixing.h"
-
-#define CythWrap_likely(x)    __builtin_expect(!!(x), 1)
-#define CythWrap_unlikely(x)  __builtin_expect(!!(x), 0)
+#include "Prefixing.h"
+#include "Vis.h"
 
 // libsodium
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_core_ristretto255_BYTES);
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_scalarmult_SCALARBYTES);
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_secretbox_KEYBYTES);
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_secretbox_MACBYTES);
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_crypto_secretbox_NONCEBYTES);
+extern const CythWrap_public_const uint16_t Wrap(const_crypto_core_ristretto255_BYTES);
+extern const CythWrap_public_const uint16_t Wrap(const_crypto_scalarmult_SCALARBYTES);
+extern const CythWrap_public_const uint16_t Wrap(const_crypto_secretbox_KEYBYTES);
+extern const CythWrap_public_const uint16_t Wrap(const_crypto_secretbox_MACBYTES);
+extern const CythWrap_public_const uint16_t Wrap(const_crypto_secretbox_NONCEBYTES);
 
 // libopaque
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_OPAQUE_REGISTER_PUBLIC_LEN);
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_OPAQUE_REGISTER_SECRET_LEN);
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_OPAQUE_REGISTRATION_RECORD_LEN);
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(const_OPAQUE_USER_RECORD_LEN);
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(sizeof_Opaque_Ids);
-extern const CYTH_WRAP_EXPORT_CONST uint16_t Wrap(alignof_Opaque_Ids);
+extern const CythWrap_public_const uint16_t Wrap(const_OPAQUE_REGISTER_PUBLIC_LEN);
+extern const CythWrap_public_const uint16_t Wrap(const_OPAQUE_REGISTER_SECRET_LEN);
+extern const CythWrap_public_const uint16_t Wrap(const_OPAQUE_REGISTRATION_RECORD_LEN);
+extern const CythWrap_public_const uint16_t Wrap(const_OPAQUE_USER_RECORD_LEN);
+extern const CythWrap_public_const uint16_t Wrap(sizeof_Opaque_Ids);
+extern const CythWrap_public_const uint16_t Wrap(alignof_Opaque_Ids);
 
 // initializer for libsodium
-CYTH_WRAP_EXPORT int Wrap(sodium_init)(void);
+CythWrap_public int Wrap(sodium_init)(void);
 
 // securely erase memory
-CYTH_WRAP_EXPORT void Wrap(sodium_memzero)(void* const pnt, const size_t len);
+CythWrap_public void Wrap(sodium_memzero)(void* const pnt, const size_t len);
 
 // keygen
-CYTH_WRAP_EXPORT const char* Wrap(Ex01_crypto_secretbox_keygen)(unsigned char k[], unsigned long long klen)
+CythWrap_public const char* Wrap(Ex01_crypto_secretbox_keygen)(unsigned char k[], unsigned long long klen)
     __attribute__((warn_unused_result));
 
 // nonce generation
-CYTH_WRAP_EXPORT const char* Wrap(Ex01_randombytes_buf)(void* const buf, const size_t size)
+CythWrap_public const char* Wrap(Ex01_randombytes_buf)(void* const buf, const size_t size)
     __attribute__((warn_unused_result));
 
 // authenticated encryption
-CYTH_WRAP_EXPORT const char* Wrap(Ex01_crypto_secretbox_easy)(
+CythWrap_public const char* Wrap(Ex01_crypto_secretbox_easy)(
     unsigned char* c,
     const unsigned char* m,
     const unsigned char* n,
@@ -49,7 +50,7 @@ CYTH_WRAP_EXPORT const char* Wrap(Ex01_crypto_secretbox_easy)(
     unsigned long long klen) __attribute__((warn_unused_result));
 
 // decryption for authenticated encryption
-CYTH_WRAP_EXPORT const char* Wrap(Ex01_crypto_secretbox_open_easy)(
+CythWrap_public const char* Wrap(Ex01_crypto_secretbox_open_easy)(
     unsigned char* m,
     const unsigned char* c,
     const unsigned char* n,
@@ -60,7 +61,7 @@ CYTH_WRAP_EXPORT const char* Wrap(Ex01_crypto_secretbox_open_easy)(
     unsigned long long klen) __attribute__((warn_unused_result));
 
 // libopaque registration step 2
-CYTH_WRAP_EXPORT const char* Wrap(Ex01_opaque_CreateRegistrationResponse)(
+CythWrap_public const char* Wrap(Ex01_opaque_CreateRegistrationResponse)(
     const uint8_t request[/*crypto_core_ristretto255_BYTES*/],
     const uint8_t skS[/*crypto_scalarmult_SCALARBYTES*/],
     uint8_t sec_out[/*OPAQUE_REGISTER_SECRET_LEN*/],
@@ -72,7 +73,7 @@ CYTH_WRAP_EXPORT const char* Wrap(Ex01_opaque_CreateRegistrationResponse)(
     uint16_t pub_len) __attribute__((warn_unused_result));
 
 // libopaque registration step 4
-CYTH_WRAP_EXPORT const char* Wrap(Ex01_opaque_StoreUserRecord)(
+CythWrap_public const char* Wrap(Ex01_opaque_StoreUserRecord)(
     const uint8_t sec[/*OPAQUE_REGISTER_SECRET_LEN*/],
     const uint8_t recU[/*OPAQUE_REGISTRATION_RECORD_LEN*/],
     uint8_t rec_out[/*OPAQUE_USER_RECORD_LEN*/],
@@ -85,7 +86,7 @@ CYTH_WRAP_EXPORT const char* Wrap(Ex01_opaque_StoreUserRecord)(
 typedef struct Wrap(Opaque_Ids_st) Wrap(Opaque_Ids);
 
 // initializer (non-allocating constructor) for Opaque_Ids
-CYTH_WRAP_EXPORT const char* Wrap(Opaque_Ids_init_nostrcopy)(
+CythWrap_public const char* Wrap(Opaque_Ids_init_nostrcopy)(
     void* selfVoidP,
     uint16_t idU_len_u16,
     uint8_t* idU,
@@ -93,7 +94,7 @@ CYTH_WRAP_EXPORT const char* Wrap(Opaque_Ids_init_nostrcopy)(
     uint8_t* idS) __attribute__((warn_unused_result));
 
 // libopaque key exchange step 2
-CYTH_WRAP_EXPORT const char* Wrap(Ex01_opaque_CreateCredentialResponse)(
+CythWrap_public const char* Wrap(Ex01_opaque_CreateCredentialResponse)(
     const Wrap(Opaque_Ids)* ids,
     const uint8_t ke1[/*OPAQUE_USER_SESSION_PUBLIC_LEN*/], /* user controlled */
     const uint8_t rec[/*OPAQUE_USER_RECORD_LEN*/],
@@ -111,7 +112,7 @@ CYTH_WRAP_EXPORT const char* Wrap(Ex01_opaque_CreateCredentialResponse)(
     uint64_t authU_len_u64) __attribute__((warn_unused_result));
 
 // libopaque key exchange step 4
-CYTH_WRAP_EXPORT const char* Wrap(Ex01_opaque_UserAuth)(
+CythWrap_public const char* Wrap(Ex01_opaque_UserAuth)(
     const uint8_t authU0[/*crypto_auth_hmacsha512_BYTES*/],
     const uint8_t authU[/*crypto_auth_hmacsha512_BYTES*/], /* user controlled */
     // length checks
